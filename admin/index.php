@@ -1,3 +1,13 @@
+<?php
+// 给用户找一个箱子（如果你之前有就用之前的，没有给个新的）
+session_start();
+if (empty($_SESSION['current_login_user'])) {
+  //没有当前登录用户信息，意味着没有登录，跳转到登录页
+  header('Location:/admin/login.php');
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>

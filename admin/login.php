@@ -1,4 +1,11 @@
 <?php 
+
+// 载入配置文件,请求响应才用绝对路径，
+require_once '../config.php';
+
+// 给用户找一个箱子（如果你之前有就用之前的，没有给个新的）
+session_start();
+
 function login(){
 
   //1.接收并校验
@@ -12,18 +19,48 @@ function login(){
     $GLOBALS['message'] = '请填写密码';
     return;
   }
- // 当客户端提交过来的完整的表单信息就应该开始对其进行数据校验
+ 
   $email = $_POST['email'];
   $password = $_POST['password'];
+  // 当客户端提交过来的完整的表单信息就应该开始对其进行数据校验
+  $conn= mysqli_connect(DB_HOST,DB_USER,DB_PASS,DB_NAME);
+  if (!$conn) {
+    exit('<h1>连接数据库失败</h1>');
+  }
 
-  if ($email !== 'admin@sample.com') {
+  $query = mysqli_query($conn, "select * from users where email = '{$email}' limit 1;");
+  if (!$query) {
+    $GLOBALS['message'] = '登录失败，请重试！';
+    return;
+  }
+  // 获取登录用户
+  $user = mysqli_fetch_assoc($query);
+
+  if (!$user) {
+    // 用户名不存在
     $GLOBALS['message'] = '邮箱与密码不匹配';
     return;
   }
-  if ($password !== 'admin') {
+
+  // 一般密码是加密存储的
+  if ($user['password'] !== md5($password)) {
+    // 密码不正确
     $GLOBALS['message'] = '邮箱与密码不匹配';
     return;
   }
+
+  // if ($email !== 'admin@sample.com') {
+  //   $GLOBALS['message'] = '邮箱与密码不匹配';
+  //   return;
+  // }
+  // if ($password !== 'admin') {
+  //   $GLOBALS['message'] = '邮箱与密码不匹配';
+  //   return;
+  // }
+
+  // 存一个登录标识
+  //$_SESSION['is_logged_in'] = true;
+  $_SESSION['current_login_user'] = $user;
 
   //校验成功
   header('Location: /admin/');
