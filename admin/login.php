@@ -12,6 +12,21 @@ function login(){
     $GLOBALS['message'] = '请填写密码';
     return;
   }
+ // 当客户端提交过来的完整的表单信息就应该开始对其进行数据校验
+  $email = $_POST['email'];
+  $password = $_POST['password'];
+
+  if ($email !== 'admin@sample.com') {
+    $GLOBALS['message'] = '邮箱与密码不匹配';
+    return;
+  }
+  if ($password !== 'admin') {
+    $GLOBALS['message'] = '邮箱与密码不匹配';
+    return;
+  }
+
+  //校验成功
+  header('Location: /admin/');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -42,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php endif ?>
       <div class="form-group">
         <label for="email" class="sr-only">邮箱</label>
-        <input id="email" name="email" type="email" class="form-control" placeholder="邮箱" autofocus>
+        <input id="email" name="email" type="email" class="form-control" placeholder="邮箱" value="<?php echo empty($_POST['email']) ? '' : $_POST['email'] ?>" autofocus>
       </div>
       <div class="form-group">
         <label for="password" class="sr-only">密码</label>
