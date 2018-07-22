@@ -1,9 +1,18 @@
 <!-- 也可以使用 $_SERVER['PHP_SELF'] 取代 $current_page -->
-<?php $current_page = isset($current_page) ? $current_page : ''; ?>
+<?php 
+
+// 因为这个 sidebar.php 是被 index.php 载入执行，所以 这里的相对路径 是相对于 index.php
+// 如果希望根治这个问题，可以采用物理路径解决
+require_once '../functions.php';
+$current_page = isset($current_page) ? $current_page : ''; 
+// session_start();
+// $current_user = $_SESSION['current_login_user'];
+$current_user = xiu_get_current_user();
+?>
 <div class="aside">
     <div class="profile">
-      <img class="avatar" src="/static/uploads/avatar.jpg">
-      <h3 class="name">布头儿</h3>
+      <img class="avatar" src="<?php echo $current_user['avatar'] ;?>">
+      <h3 class="name"><?php echo $current_user['nickname'] ;?></h3>
     </div>
     <ul class="nav">
       <li class="<?php echo $current_page === 'index' ? ' active' :''; ?>">

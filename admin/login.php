@@ -23,7 +23,7 @@ function login(){
   $email = $_POST['email'];
   $password = $_POST['password'];
   // 当客户端提交过来的完整的表单信息就应该开始对其进行数据校验
-  $conn= mysqli_connect(DB_HOST,DB_USER,DB_PASS,DB_NAME);
+  $conn= mysqli_connect(XIU_DB_HOST,XIU_DB_USER,XIU_DB_PASS,XIU_DB_NAME);
   if (!$conn) {
     exit('<h1>连接数据库失败</h1>');
   }
@@ -61,7 +61,7 @@ function login(){
   // 存一个登录标识
   //$_SESSION['is_logged_in'] = true;
   $_SESSION['current_login_user'] = $user;
-
+  //$_SESSION['current_login_user_id'] = $user['id'];
   //校验成功
   header('Location: /admin/');
 }
@@ -103,5 +103,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button class="btn btn-primary btn-block">登 录</button>
     </form>
   </div>
+  <script src="/static/assets/vendors/jquery/jquery.js"></script>
+  <script>
+    $(function ($) {
+      // 1. 单独作用域
+      // 2. 确保页面加载过后执行
+
+      // 目标：在用户输入自己的邮箱过后，页面上展示这个邮箱对应的头像
+      // 实现：
+      // - 时机：邮箱文本框失去焦点，并且能够拿到文本框中填写的邮箱时
+      // - 事情：获取这个文本框中填写的邮箱对应的头像地址，展示到上面的 img 元素上
+
+      var emailFormat = /^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z0-9]+$/
+
+      $('#email').on('blur', function () {
+        var value = $(this).val()
+        // 忽略掉文本框为空或者不是一个邮箱
+        if (!value || !emailFormat.test(value)) return
+
+        // 用户输入了一个合理的邮箱地址
+        // 获取这个邮箱对应的头像地址
+        // 因为客户端的 JS 无法直接操作数据库，应该通过 JS 发送 AJAX 请求 告诉服务端的某个接口，
+        // 让这个接口帮助客户端获取头像地址
+        $.get('/admin/api/avatar.php', { email: value }, function (res) {
+          // 希望 res => 这个邮箱对应的头像地址
+          if (!res) return
+          // 展示到上面的 img 元素上
+          // $('.avatar').fadeOut().attr('src', res).fadeIn()
+          $('.avatar').fadeOut(function () {
+            // 等到 淡出完成
+            $(this).on('load', function () {
+              // 图片完全加载成功过后
+              $(this).fadeIn()
+            }).attr('src', res);
+          })
+        })
+      })
+    })
+  </script>
 </body>
 </html>

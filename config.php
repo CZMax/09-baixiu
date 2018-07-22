@@ -7,16 +7,21 @@
 /**
  * 数据库主机
  */
-define('DB_HOST', 'localhost');
+define('XIU_DB_HOST', 'localhost');
 /**
  * 数据库用户名
  */
-define('DB_USER', 'root');
+define('XIU_DB_USER', 'root');
 /**
  * 数据库密码
  */
-define('DB_PASS', 'root');
+define('XIU_DB_PASS', 'root');
 /**
  * 数据库名字
  */
-define('DB_NAME', 'baixiu-dev');
+define('XIU_DB_NAME', 'baixiu-dev');
+
+/**
+ * 项目根目录
+ */
+ define('ROOT_DIR',dirname(__FILE__));
