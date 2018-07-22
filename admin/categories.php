@@ -1,3 +1,12 @@
+<?php
+
+require_once '../functions.php';
+
+xiu_get_current_user();
+
+$categories = xiu_fetch_all('select * from categories;');
+?>
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -55,33 +64,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="text-center"><input type="checkbox"></td>
-                <td>未分类</td>
-                <td>uncategorized</td>
-                <td class="text-center">
-                  <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-                  <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-                </td>
-              </tr>
-              <tr>
-                <td class="text-center"><input type="checkbox"></td>
-                <td>未分类</td>
-                <td>uncategorized</td>
-                <td class="text-center">
-                  <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-                  <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-                </td>
-              </tr>
-              <tr>
-                <td class="text-center"><input type="checkbox"></td>
-                <td>未分类</td>
-                <td>uncategorized</td>
-                <td class="text-center">
-                  <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-                  <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
-                </td>
-              </tr>
+              <?php foreach ($categories as $item): ?>
+                <tr>
+                  <td class="text-center"><input type="checkbox"></td>
+                  <td><?php echo $item['name']; ?></td>
+                  <td><?php echo $item['slug']; ?></td>
+                  <td class="text-center">
+                    <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
+                    <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+                  </td>
+                </tr>
+              <?php endforeach ?>
             </tbody>
           </table>
         </div>

@@ -19,7 +19,7 @@ $current_user = xiu_get_current_user();
         <a href="index.php"><i class="fa fa-dashboard"></i>仪表盘</a>
       </li>
       <?php $menu_posts = array('posts','post-add','categories');?>
-      <li class="<?php echo in_array($current_page,$menu_posts)=== 'posts'? ' active' :''; ?>">
+      <li class="<?php echo in_array($current_page,$menu_posts) ? ' active' :''; ?>">
         <a href="#menu-posts" class="<?php echo in_array($current_page,$menu_posts) ? ' collapsed' :''; ?>" data-toggle="collapse">
           <i class="fa fa-thumb-tack"></i>文章<i class="fa fa-angle-right"></i>
         </a>

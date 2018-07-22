@@ -1,5 +1,6 @@
 <?php
 
+require_once 'config.php';
 /**
  * 封装大家公用的函数
  */
@@ -18,5 +19,38 @@ function xiu_get_current_user(){
       return $_SESSION['current_login_user'];
 }
 
+/**
+ * 通过一个数据库查询获取数据
+ * =>索引数组套关联数组
+ */
+function xiu_fetch_all($sql){
+    $conn = mysqli_connect(XIU_DB_HOST, XIU_DB_USER, XIU_DB_PASS, XIU_DB_NAME);
+    if (!$conn){
+        exit('数据库连接失败');
+    }
+    $query = mysqli_query($conn,$sql);
+    if (!$query) {
+        // 查询失败
+        return false;
+    }
+        
+    while ($rows = mysqli_fetch_assoc($query)){
+        var_dump($rows);
+        $result[]=$rows;
+    }
+    
+    mysqli_free_result($query);
+    mysqli_close($conn);
 
-  
+    return $result;
+
+}
+/**
+ * 通过一个数据库查询获取一条数据
+ * =>关联数组
+ */
+function xiu_fetch_one ($sql){
+    $res = xiu_fetch_all($sql);
+    return  isset($res[0]) ? $res[0] : null;
+
+}
