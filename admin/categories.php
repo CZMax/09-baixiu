@@ -4,7 +4,32 @@ require_once '../functions.php';
 
 xiu_get_current_user();
 
+function add_category(){
+  if (empty($_POST['name']) || empty($_POST['slug'])) {
+    $GLOBALS['message'] = '请完整填写表单！';
+    return;
+  }
+   // 接收并保存
+   $name = $_POST['name'];
+   $slug = $_POST['slug'];
+
+  // insert into categories values (null, 'slug', 'name');
+  $rows = xiu_execute("insert into categories values (null, '{$slug}', '{$name}');");
+
+  $GLOBALS['success'] = $rows > 0;
+  $GLOBALS['message'] = $rows <= 0 ? '添加失败！' : '添加成功！';
+}
+
+//如果修改操作与查询操作在一起，一定是先做修改，再查询。
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  //表单提交请求没，就意味着要添加
+  add_category();
+}
+
+
+// 查询全部的分类数据
 $categories = xiu_fetch_all('select * from categories;');
+
 ?>
 
 <!DOCTYPE html>
@@ -28,12 +53,20 @@ $categories = xiu_fetch_all('select * from categories;');
         <h1>分类目录</h1>
       </div>
       <!-- 有错误信息时展示 -->
-      <!-- <div class="alert alert-danger">
-        <strong>错误！</strong>发生XXX错误
-      </div> -->
+      <?php if (isset($message)): ?>
+      <?php if ($success): ?>
+      <div class="alert alert-success">
+        <strong>成功！</strong> <?php echo $message; ?>
+      </div>
+      <?php else: ?>
+      <div class="alert alert-danger">
+        <strong>错误！</strong> <?php echo $message; ?>
+      </div>
+      <?php endif ?>
+      <?php endif ?>
       <div class="row">
         <div class="col-md-4">
-          <form>
+          <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
             <h2>添加新分类目录</h2>
             <div class="form-group">
               <label for="name">名称</label>
@@ -70,8 +103,8 @@ $categories = xiu_fetch_all('select * from categories;');
                   <td><?php echo $item['name']; ?></td>
                   <td><?php echo $item['slug']; ?></td>
                   <td class="text-center">
-                    <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-                    <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+                    <a href="/admin/categories.php?id=<?php echo $item['id']; ?>" class="btn btn-info btn-xs">编辑</a>
+                  <a href="/admin/category-delete.php?id=<?php echo $item['id']; ?>" class="btn btn-danger btn-xs">删除</a>
                   </td>
                 </tr>
               <?php endforeach ?>
@@ -86,6 +119,51 @@ $categories = xiu_fetch_all('select * from categories;');
 
   <script src="/static/assets/vendors/jquery/jquery.js"></script>
   <script src="/static/assets/vendors/bootstrap/js/bootstrap.js"></script>
+  <script>
+  // 1. 不要重复使用无意义的选择操作，应该采用变量去本地化
+  $(function ($) {
+      // 在表格中的任意一个 checkbox 选中状态变化时
+      var $tbodyCheckboxs = $('tbody input')
+      var $btnDelete = $('#btn_delete')
+
+      // 定义一个数组记录被选中的
+      var allCheckeds = []
+      $tbodyCheckboxs.on('change', function () {
+        // this.dataset['id']
+        // console.log($(this).attr('data-id'))
+        // console.log($(this).data('id'))
+        var id = $(this).data('id')
+
+        // 根据有没有选中当前这个 checkbox 决定是添加还是移除
+        if ($(this).prop('checked')) {
+          allCheckeds.push(id)
+        } else {
+          allCheckeds.splice(allCheckeds.indexOf(id), 1)
+        }
+
+        // 根据剩下多少选中的 checkbox 决定是否显示删除
+        allCheckeds.length ? $btnDelete.fadeIn() : $btnDelete.fadeOut()
+        $btnDelete.prop('search', '?id=' + allCheckeds)
+      })
+
+      // ## version 1 =================================
+      // $tbodyCheckboxs.on('change', function () {
+      //   // 有任意一个 checkbox 选中就显示，反之隐藏
+      //   var flag = false
+      //   $tbodyCheckboxs.each(function (i, item) {
+      //     // attr 和 prop 区别：
+      //     // - attr 访问的是 元素属性
+      //     // - prop 访问的是 元素对应的DOM对象的属性
+      //     // console.log($(item).prop('checked'))
+      //     if ($(item).prop('checked')) {
+      //       flag = true
+      //     }
+      //   })
+
+      //   flag ? $btnDelete.fadeIn() : $btnDelete.fadeOut()
+      // })
+    })
+  </script>
   <script>NProgress.done()</script>
 </body>
 </html>

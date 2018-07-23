@@ -54,3 +54,40 @@ function xiu_fetch_one ($sql){
     return  isset($res[0]) ? $res[0] : null;
 
 }
+/**
+ * 修改数据库记录
+ * 
+ */
+function xiu_execute($sql){
+    $conn = mysqli_connect(XIU_DB_HOST, XIU_DB_USER, XIU_DB_PASS, XIU_DB_NAME);
+    if (!$conn){
+        exit('数据库连接失败');
+    }
+    $query = mysqli_query($conn,$sql);
+    if (!$query) {
+        // 查询失败
+        return false;
+    }
+    //获取受影响行数
+    $affected_rows = mysqli_affected_rows($conn);
+    
+    mysqli_close($conn);
+
+    return $affected_rows;
+}
+
+/**
+ * 连接
+ */
+function xiu_conn(){
+    $conn = mysqli_connect(XIU_DB_HOST, XIU_DB_USER, XIU_DB_PASS, XIU_DB_NAME);
+    if (!$conn){
+        exit('数据库连接失败');
+    }
+    $query = mysqli_query($conn,$sql);
+    if (!$query) {
+        // 查询失败
+        return false;
+    }
+    return $conn;
+}
