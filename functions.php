@@ -35,7 +35,7 @@ function xiu_fetch_all($sql){
     }
         
     while ($rows = mysqli_fetch_assoc($query)){
-        var_dump($rows);
+        // var_dump($rows);
         $result[]=$rows;
     }
     
