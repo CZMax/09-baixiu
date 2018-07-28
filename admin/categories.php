@@ -207,14 +207,26 @@ $categories = xiu_fetch_all('select * from categories;');
 
         // 根据有没有选中当前这个 checkbox 决定是添加还是移除
         if ($(this).prop('checked')) {
-          allCheckeds.push(id)
+          // allCheckeds.indexOf(id) === -1 || allCheckeds.push(id)
+          allCheckeds.includes(id) || allCheckeds.push(id)
         } else {
           allCheckeds.splice(allCheckeds.indexOf(id), 1)
         }
 
+
         // 根据剩下多少选中的 checkbox 决定是否显示删除
         allCheckeds.length ? $btnDelete.fadeIn() : $btnDelete.fadeOut()
         $btnDelete.prop('search', '?id=' + allCheckeds)
+      })
+      
+      // 找一个合适的时机 做一件合适的事情
+      // 全选和全不选
+      $('thead input').on('change', function () {
+        // 1. 获取当前选中状态
+        var checked = $(this).prop('checked')
+        // 2. 设置给标体中的每一个
+        $tbodyCheckboxs.prop('checked', checked).trigger('change')
+        // $tbodyCheckboxs.attr('checked', checked).trigger('change')
       })
 
       // ## version 1 =================================
