@@ -4,57 +4,17 @@ require_once '../functions.php';
 
 xiu_get_current_user();
 
-// 接收筛选参数
-// ==================================
-
-$where = '1 = 1';
-$search = '';
-
-// 分类筛选
-if (isset($_GET['category']) && $_GET['category'] !== 'all') {
-  $where .= ' and posts.category_id = ' . $_GET['category'];
-  $search .= '&category=' . $_GET['category'];
-}
-
-if (isset($_GET['status']) && $_GET['status'] !== 'all') {
-  $where .= " and posts.status = '{$_GET['status']}'";
-  $search .= '&status=' . $_GET['status'];
-}
-
-// $where => "1 = 1 and posts.category_id = 1 and posts.status = 'published'"
-// $search => "&category=1&status=published"
-
 // 处理分页参数
 // =========================================
 
-$size = 20;
 $page = empty($_GET['page']) ? 1 : (int)$_GET['page'];
-// 必须 >= 1 && <= 总页数
-
-// $page = $page < 1 ? 1 : $page;
-if ($page < 1) {
-  // 跳转到第一页
-  header('Location: /admin/posts.php?page=1' . $search);
-}
-
-// 只要是处理分页功能一定会用到最大的页码数
-$total_count = (int)xiu_fetch_one("select count(1) as count from posts
-inner join categories on posts.category_id = categories.id
-inner join users on posts.user_id = users.id
-where {$where};")['count'];
-$total_pages = (int)ceil($total_count / $size);
-
-// $page = $page > $total_pages ? $total_pages : $page;
-if ($page > $total_pages) {
-  // 跳转到第最后页
-  header('Location: /admin/posts.php?page=' . $total_pages . $search);
-}
-
-// 获取全部数据
-// ===================================
+$size = 20;
 
 // 计算出越过多少条
 $offset = ($page - 1) * $size;
+
+// 获取全部数据
+// ===================================
 
 $posts = xiu_fetch_all("select
   posts.id,
@@ -66,29 +26,61 @@ $posts = xiu_fetch_all("select
 from posts
 inner join categories on posts.category_id = categories.id
 inner join users on posts.user_id = users.id
-where {$where}
 order by posts.created desc
 limit {$offset}, {$size};");
 
-// 查询全部的分类数据
-$categories = xiu_fetch_all('select * from categories;');
-
 // 处理分页页码
 // ===============================
+// $page = 50
 
+// 求出最大页码
+$total_count = (int)xiu_fetch_one('select count(1) as num from posts;')['num'];
+$total_pages = (int)ceil($total_count / $size);
+// => 51
+
+/*
+  1. 当前页码显示高亮
+  2. 左侧和右侧各有2个页码
+  3. 开始页码不能小于1
+  4. 结束页码不能大于最大页数
+  5. 当前页码不为1时显示上一页
+  6. 当前页码不为最大值是显示下一页
+  7. 当开始页码不等于1时显示省略号
+  8. 当结束页码不等于最大时显示省略号
+*/
+
+// 计算页码开始
 $visiables = 5;
+$region = ($visiables - 1) / 2; // 左右区间
+// => 2
 
-// 计算最大和最小展示的页码
-$begin = $page - ($visiables - 1) / 2;
-$end = $begin + $visiables - 1;
+$begin = $page - $region; // 开始页码
+// => 48
+$end = $begin + $visiables; // 结束页码 + 1
+// => 53
 
-// 重点考虑合理性的问题
-// begin > 0  end <= total_pages
-$begin = $begin < 1 ? 1 : $begin; // 确保了 begin 不会小于 1
-$end = $begin + $visiables - 1; // 因为 50 行可能导致 begin 变化，这里同步两者关系
-$end = $end > $total_pages ? $total_pages : $end; // 确保了 end 不会大于 total_pages
-$begin = $end - $visiables + 1; // 因为 52 可能改变了 end，也就有可能打破 begin 和 end 的关系
-$begin = $begin < 1 ? 1 : $begin; // 确保不能小于 1
+// 可能出现 $begin 和 $end 的不合理情况
+// $begin 必须 > 0
+// 确保 $begin 最下为 1
+if ($begin < 1) {
+  $begin = 1;
+  // begin 修改意味着必须要改 end
+  $end = $begin + $visiables;
+}
+
+// $end 必须 <= 最大页数
+if ($end > $total_pages + 1) {
+  // end 超出范围
+  $end = $total_pages + 1;
+  // end 修改意味着必须要改 begin
+  $begin = $end - $visiables;
+  if ($begin < 1) {
+    $begin = 1;
+  }
+}
+// 最大的页数 $total_pages = ceil($total_count / $size)
+
+
 
 // 处理数据格式转换
 // ===========================================
@@ -115,10 +107,19 @@ function convert_status ($status) {
 function convert_date ($created) {
   // => '2017-07-01 08:08:00'
   // 如果配置文件没有配置时区
-  date_default_timezone_set('PRC');
+  // date_default_timezone_set('PRC');
   $timestamp = strtotime($created);
   return date('Y年m月d日<b\r>H:i:s', $timestamp);
 }
+
+// 如果通过这种方式的话会导致每一行数据产生一次查询数据库的操作，导致操作数据库过于平凡
+// function get_category ($category_id) {
+//   return xiu_fetch_one("select name from categories where id = {$category_id}")['name'];
+// }
+
+// function get_user ($user_id) {
+//   return xiu_fetch_one("select nickname from users where id = {$user_id}")['nickname'];
+// }
 
 ?>
 <!DOCTYPE html>
@@ -150,27 +151,22 @@ function convert_date ($created) {
       <div class="page-action">
         <!-- show when multiple checked -->
         <a class="btn btn-danger btn-sm" href="javascript:;" style="display: none">批量删除</a>
-        <form class="form-inline" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-          <select name="category" class="form-control input-sm">
-            <option value="all">所有分类</option>
-            <?php foreach ($categories as $item): ?>
-            <option value="<?php echo $item['id']; ?>"<?php echo isset($_GET['category']) && $_GET['category'] == $item['id'] ? ' selected' : '' ?>>
-              <?php echo $item['name']; ?>
-            </option>
-            <?php endforeach ?>
+        <form class="form-inline">
+          <select name="" class="form-control input-sm">
+            <option value="">所有分类</option>
+            <option value="">未分类</option>
           </select>
-          <select name="status" class="form-control input-sm">
-            <option value="all">所有状态</option>
-            <option value="drafted"<?php echo isset($_GET['status']) && $_GET['status'] == 'drafted' ? ' selected' : '' ?>>草稿</option>
-            <option value="published"<?php echo isset($_GET['status']) && $_GET['status'] == 'published' ? ' selected' : '' ?>>已发布</option>
-            <option value="trashed"<?php echo isset($_GET['status']) && $_GET['status'] == 'trashed' ? ' selected' : '' ?>>回收站</option>
+          <select name="" class="form-control input-sm">
+            <option value="">所有状态</option>
+            <option value="">草稿</option>
+            <option value="">已发布</option>
           </select>
           <button class="btn btn-default btn-sm">筛选</button>
         </form>
         <ul class="pagination pagination-sm pull-right">
           <li><a href="#">上一页</a></li>
-          <?php for ($i = $begin; $i <= $end; $i++): ?>
-          <li<?php echo $i === $page ? ' class="active"' : '' ?>><a href="?page=<?php echo $i . $search; ?>"><?php echo $i; ?></a></li>
+          <?php for ($i = $begin; $i < $end; $i++): ?>
+          <li<?php echo $i === $page ? ' class="active"' : ''; ?>><a href="?page=<?php echo $i; ?>"><?php echo $i; ?></a></li>
           <?php endfor ?>
           <li><a href="#">下一页</a></li>
         </ul>
@@ -201,7 +197,7 @@ function convert_date ($created) {
             <td class="text-center"><?php echo convert_status($item['status']); ?></td>
             <td class="text-center">
               <a href="javascript:;" class="btn btn-default btn-xs">编辑</a>
-              <a href="/admin/post-delete.php?id=<?php echo $item['id']; ?>" class="btn btn-danger btn-xs">删除</a>
+              <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
             </td>
           </tr>
           <?php endforeach ?>
